@@ -1,0 +1,89 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: dev
+      context: data-init
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: 1
+              - column:
+                  name: name
+                  value: John Doe
+              - column:
+                  name: email
+                  value: john.doe@example.com
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: 2
+              - column:
+                  name: name
+                  value: Jane Smith
+              - column:
+                  name: email
+                  value: jane.smith@example.com
+
+        - insert:
+            tableName: subscriptions
+            columns:
+              - column:
+                  name: id
+                  value: 1
+              - column:
+                  name: name
+                  value: Basic Plan
+              - column:
+                  name: description
+                  value: Basic subscription with limited features
+              - column:
+                  name: price
+                  value: 9.99
+        - insert:
+            tableName: subscriptions
+            columns:
+              - column:
+                  name: id
+                  value: 2
+              - column:
+                  name: name
+                  value: Premium Plan
+              - column:
+                  name: description
+                  value: Full subscription with all features
+              - column:
+                  name: price
+                  value: 19.99
+
+        - insert:
+            tableName: user_subscriptions
+            columns:
+              - column:
+                  name: user_id
+                  value: 1
+              - column:
+                  name: subscription_id
+                  value: 1
+        - insert:
+            tableName: user_subscriptions
+            columns:
+              - column:
+                  name: user_id
+                  value: 1
+              - column:
+                  name: subscription_id
+                  value: 2
+        - insert:
+            tableName: user_subscriptions
+            columns:
+              - column:
+                  name: user_id
+                  value: 2
+              - column:
+                  name: subscription_id
+                  value: 1
