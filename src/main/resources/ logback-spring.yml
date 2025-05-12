@@ -1,0 +1,29 @@
+configuration:
+  property:
+    - name: LOG_PATH
+      value: logs
+
+  appender:
+    console:
+      name: STDOUT
+      class: ch.qos.logback.core.ConsoleAppender
+      encoder:
+        pattern: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+    rollingFile:
+      name: FILE
+      class: ch.qos.logback.core.rolling.RollingFileAppender
+      file: "${LOG_PATH}/app.log"
+      encoder:
+        pattern: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+      rollingPolicy:
+        class: ch.qos.logback.core.rolling.TimeBasedRollingPolicy
+        fileNamePattern: "${LOG_PATH}/app.%d{yyyy-MM-dd}.log"
+        maxHistory: 30        # Хранить логи 30 дней
+        cleanHistoryOnStart: true  # Очищать старые логи при запуске
+
+  root:
+    level: INFO
+    appender-ref:
+      - ref: STDOUT
+      - ref: FILE
