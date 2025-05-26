@@ -66,7 +66,7 @@ class UsersControllerImplTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("John Updated"));
 
-        mockMvc.perform(delete("/users?id={id}", userId))
+        mockMvc.perform(delete("/users/{id}", userId))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/users/{id}", userId))
