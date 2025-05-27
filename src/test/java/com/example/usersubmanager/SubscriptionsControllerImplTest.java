@@ -165,44 +165,52 @@ public class SubscriptionsControllerImplTest {
         }
 
 
-        @Test
-    void deleteSubscription_ShouldDeleteSubscription() throws Exception {
+    @Test
+    void deleteSubscription_ShouldDeleteAllUserSubscriptions() throws Exception {
         // Given
         Long userId = 1L;
 
-        // First add a subscription
+        // Добавим подписку
         SubscriptionRequestDto requestDto = new SubscriptionRequestDto(
                 "Disney+",
                 "Streaming service",
                 new BigDecimal("7.99")
         );
 
-        MvcResult addResult = mockMvc.perform(post("/users/{id}/subscriptions", userId)
+        mockMvc.perform(post("/users/{id}/subscriptions", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isCreated());
+
+        // Убедимся, что подписка добавлена
+        MvcResult beforeDelete = mockMvc.perform(get("/users/{id}/subscriptions", userId))
+                .andExpect(status().isOk())
                 .andReturn();
 
-        SubscriptionResponseDto addedSubscription = objectMapper.readValue(
-                addResult.getResponse().getContentAsString(),
-                SubscriptionResponseDto.class
-        );
-
-        // When
-        mockMvc.perform(delete("/users/{id}/subscriptions", userId)
-                        .param("subscriptionId", addedSubscription.id().toString()))
-                .andExpect(status().isOk());
-
-        // Then
-        MvcResult getResult = mockMvc.perform(get("/users/{id}/subscriptions", userId))
-                .andReturn();
-
-        Set<SubscriptionResponseDto> subscriptions = objectMapper.readValue(
-                getResult.getResponse().getContentAsString(),
+        Set<SubscriptionResponseDto> beforeSubscriptions = objectMapper.readValue(
+                beforeDelete.getResponse().getContentAsString(),
                 objectMapper.getTypeFactory().constructCollectionType(Set.class, SubscriptionResponseDto.class)
         );
 
-        assertTrue("",subscriptions.isEmpty());
+        assertFalse(beforeSubscriptions.isEmpty());
+
+        // When: удаляем все подписки
+        mockMvc.perform(delete("/users/{id}/subscriptions", userId))
+                .andExpect(status().isOk());
+
+        // Then: убедимся, что подписок больше нет
+        MvcResult afterDelete = mockMvc.perform(get("/users/{id}/subscriptions", userId))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Set<SubscriptionResponseDto> afterSubscriptions = objectMapper.readValue(
+                afterDelete.getResponse().getContentAsString(),
+                objectMapper.getTypeFactory().constructCollectionType(Set.class, SubscriptionResponseDto.class)
+        );
+
+        assertTrue("",afterSubscriptions.isEmpty());
     }
+
 
     @Test
     void getTopSubscriptions_ShouldReturnPopularSubscriptions() throws Exception {

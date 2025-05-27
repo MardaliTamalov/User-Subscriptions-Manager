@@ -18,6 +18,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -40,11 +41,12 @@ class UserServiceImplTest {
         when(userMapper.requestToUser(requestDto)).thenReturn(user);
         when(userRepository.save(user)).thenReturn(user);
         when(userMapper.userToUserResponseDto(user)).thenReturn(responseDto);
-
+//doNothing().when(userRepository).save(user);
         UserResponseDto result = userService.createUser(requestDto);
 
         assertEquals(responseDto, result);
         verify(userRepository, times(1)).save(user);
+        verifyNoMoreInteractions(userRepository);
     }
 
     @Test
