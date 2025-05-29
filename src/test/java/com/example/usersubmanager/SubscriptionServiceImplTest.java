@@ -48,14 +48,19 @@ public class SubscriptionServiceImplTest {
                 new Subscription(1L, "Яндекс подписка", "Базовый доступ к платформе", new BigDecimal("9.99"), new HashSet<>()),
                 new Subscription(2L, "VK музыка", "Полный доступ, включая премиум функции", new BigDecimal("19.99"), new HashSet<>())
         );
-        Subscription subscription = subscriptions.stream()
+        Subscription subscription1 = subscriptions.stream()
                 .filter(s -> s.getId().equals(1L))
                 .findFirst()
                 .orElseThrow();
-        SubscriptionResponseDto subscriptionResponseDto = new SubscriptionResponseDto(1L, "Яндекс подписка", "Базовый доступ к платформе", new BigDecimal("9.99"));
-
+        Subscription subscription2 = subscriptions.stream()
+                .filter(s -> s.getId().equals(2L))
+                .findFirst()
+                .orElseThrow();
+        SubscriptionResponseDto subscriptionResponseDto1 = new SubscriptionResponseDto(1L, "Яндекс подписка", "Базовый доступ к платформе", new BigDecimal("9.99"));
+        SubscriptionResponseDto subscriptionResponseDto2 = new SubscriptionResponseDto(2L, "VK музыка", "Полный доступ, включая премиум функции", new BigDecimal("19.99"));
         when(subscriptionRepository.findAllByUsersId(userId)).thenReturn(subscriptions);
-        when(subscriptionMapper.toDto(any(Subscription.class))).thenReturn(subscriptionResponseDto);
+        when(subscriptionMapper.toDto(subscription1)).thenReturn(subscriptionResponseDto1);
+        when(subscriptionMapper.toDto(subscription2)).thenReturn(subscriptionResponseDto2);
         subscriptionService.getSubscriptionById(userId);
 
         verify(subscriptionRepository, times(1)).findAllByUsersId(userId);
@@ -64,7 +69,7 @@ public class SubscriptionServiceImplTest {
     @Test
     void getUserByIdNotFound() {
         Long userId = 999L;
-        when(subscriptionService.getSubscriptionById(userId)).thenReturn(Collections.emptySet());
+        when(subscriptionRepository.findAllByUsersId(userId)).thenReturn(Collections.emptySet());
 
         assertThrows(UserNotFoundException.class, () -> subscriptionService.getSubscriptionById(userId));
 
@@ -78,29 +83,56 @@ public class SubscriptionServiceImplTest {
         User user = new User(userId, "John", "john@example.com", new HashSet<>());
         SubscriptionRequestDto subscriptionRequestDto = new SubscriptionRequestDto("Яндекс подписка", "Базовый доступ к платформе", new BigDecimal("9.99"));
 
-
         when(subscriptionRepository.findByName(subscriptionRequestDto.name())).thenReturn(Optional.of(subscription));
-        Subscription result = subscriptionRepository.findByName(subscriptionRequestDto.name())
-                .orElseGet(() -> {
-                    Subscription newSub = new Subscription();
-                    newSub.setName(subscriptionRequestDto.name());
-                    newSub.setDescription(subscriptionRequestDto.description());
-                    newSub.setPrice(subscriptionRequestDto.price());
-                    return subscriptionRepository.save(newSub);
-                });
-        assertEquals(subscription.getName(), result.getName());
-        assertEquals(subscription.getDescription(), result.getDescription());
-        assertEquals(subscription.getPrice(), result.getPrice());
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        boolean added = user.getSubscriptions().add(subscription);
-        assertTrue(added);
 
         when(userRepository.save(user)).thenReturn(user);
 
-        subscriptionService.createSubscription(userId, subscriptionRequestDto);
+        SubscriptionResponseDto subscriptionResponseDto = subscriptionService.createSubscription(userId, subscriptionRequestDto);
+        assertEquals(subscriptionRequestDto.name(), subscriptionResponseDto.name());
+        assertEquals(subscriptionRequestDto.description(), subscriptionResponseDto.description());
+        assertEquals(subscriptionRequestDto.price(), subscriptionResponseDto.price());
+
+        verify(subscriptionRepository, times(0)).save(any(Subscription.class));
+        verify(userRepository, times(1)).findById(userId);
+        verify(subscriptionRepository, times(1)).findByName(subscriptionRequestDto.name());
+    }
+
+
+    @Test
+    void createNewSubscriptionSuccess() {
+        Long userId = 1L;
+        Subscription subscription = new Subscription(1L, "Яндекс подписка", "Базовый доступ к платформе", new BigDecimal("9.99"), new HashSet<>());
+        User user = new User(userId, "John", "john@example.com", new HashSet<>());
+        SubscriptionRequestDto subscriptionRequestDto = new SubscriptionRequestDto("Яндекс подписка", "Базовый доступ к платформе", new BigDecimal("9.99"));
+
+        when(subscriptionRepository.findByName(subscriptionRequestDto.name())).thenReturn(Optional.empty());
+        when(subscriptionRepository.save(any(Subscription.class))).thenReturn(subscription);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        when(userRepository.save(user)).thenReturn(user);
+
+        SubscriptionResponseDto subscriptionResponseDto = subscriptionService.createSubscription(userId, subscriptionRequestDto);
+        assertEquals(subscriptionRequestDto.name(), subscriptionResponseDto.name());
+        assertEquals(subscriptionRequestDto.description(), subscriptionResponseDto.description());
+        assertEquals(subscriptionRequestDto.price(), subscriptionResponseDto.price());
 
         verify(subscriptionRepository, times(1)).save(any(Subscription.class));
+        verify(userRepository, times(1)).findById(userId);
+        verify(subscriptionRepository, times(1)).findByName(subscriptionRequestDto.name());
+    }
+
+    @Test
+    void creatSubscriptionWhenUserNotFound() {
+        Long userId = 999L;
+        SubscriptionRequestDto subscriptionRequestDto = new SubscriptionRequestDto("Яндекс подписка", "Базовый доступ к платформе", new BigDecimal("9.99"));
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> subscriptionService.createSubscription(userId, subscriptionRequestDto));
+
+        verify(userRepository, times(1)).findById(userId);
     }
 
     @Test
@@ -116,6 +148,7 @@ public class SubscriptionServiceImplTest {
     void deleteSubscriptionByIdNotFound() {
         Long subscriptionId = 999L;
         when(subscriptionRepository.existsById(subscriptionId)).thenReturn(false);
+        assertThrows(SubscriptionNotFoundException.class, () -> subscriptionService.deleteSubscriptionById(subscriptionId));
 
         verify(subscriptionRepository, times(1)).existsById(subscriptionId);
     }
@@ -134,8 +167,5 @@ public class SubscriptionServiceImplTest {
         subscriptionService.getTopSubscriptions();
 
         verify(subscriptionRepository, times(1)).findTop3PopularSubscriptions();
-
     }
-
-
 }
