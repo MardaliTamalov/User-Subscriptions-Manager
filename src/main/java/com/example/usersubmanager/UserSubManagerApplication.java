@@ -15,14 +15,4 @@ public class UserSubManagerApplication {
         SpringApplication.run(UserSubManagerApplication.class, args);
     }
 
-
-    @Bean
-    public OpenAPI customOpenAPI() {
-        return new OpenAPI()
-                .openapi("3.0.1")
-                .info(new Info()
-                        .title("My API")
-                        .version("1.0")
-                        .description("API documentation"));
-    }
 }
