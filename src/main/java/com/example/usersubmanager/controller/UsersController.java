@@ -22,7 +22,7 @@ public interface UsersController {
     })
     @Parameter(name = "id", description = "id пользователя", example = "1")
     @GetMapping("/{id}")
-    public UserResponseDto getUser(@PathVariable Long id);
+    public UserResponseDto getUser(@PathVariable Long id) throws InterruptedException;
 
     @PutMapping("/{id}")
     public UserResponseDto updateUser(@PathVariable Long id, @RequestBody UserRequestDto requestDto);
