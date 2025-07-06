@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: UserSubManager
+  datasource:
+    url: jdbc:postgresql://localhost:5432/users
+    username: Mardali
+    password: Mardali
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  liquibase:
+    enabled: false
+    change-log: classpath:/db/changelog/changelog.yaml
+    default-schema: public
+  doc:
+    swagger-ui:
+      path: /swagger-ui.html
+      tagsSorter: alpha
+      operationsSorter: alpha
+    api-docs:
+      path: /api-docs
+  cache:
+    redis:
+      cache-null-values: false
+  data:
+    redis:
+      port: 6379
+      host: localhost
+      database: 0
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+          auto-create-topics: false
+      configuration:
+        security:
+          protocol: PLAINTEXT
+    bindings:
+      notifications-producer-out-0:
+        destination: notification.status
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
